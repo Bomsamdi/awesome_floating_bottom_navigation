@@ -7,7 +7,8 @@
 
 A Flutter package that provides a customizable floating bottom navigation bar with different options for item positions, including extend and center.
 
-[Watch the Demo Video](your_video_url)
+https://github.com/Bomsamdi/awesome_floating_bottom_navigation/assets/94292009/8d476c59-5ed9-4df5-88c3-d3a18f92003b
+
 
 ## Installation
 
