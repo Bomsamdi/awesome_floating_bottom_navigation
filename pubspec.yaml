@@ -1,7 +1,7 @@
 name: awesome_floating_bottom_navigation
-description: "A new Flutter package project."
+description: "Awesome Flutter Floating Bottom Navigation Bar with configurable items position (expand and center)."
 version: 0.0.1
-homepage:
+homepage: https://github.com/Bomsamdi/awesome_floating_bottom_navigation
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
