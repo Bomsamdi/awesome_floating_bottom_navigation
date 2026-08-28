@@ -1,11 +1,28 @@
-part of 'awesome_floating_bottom_navigation.dart';
+//  Created by Bomsamdi on 2024
+//  Copyright © 2024 Bomsamdi. All rights reserved.
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+
+import 'around_custom_painter.dart';
+import 'navigation_bar_item.dart';
+import 'safe_area_values.dart';
 
 /// Signature for a function that creates a widget for a given index & state.
 /// Used by [AwesomeFloatingBottomNavigation.builder].
-typedef IndexedWidgetBuilder = Widget Function(int index, bool isActive);
+///
+/// Named `AwesomeTabBuilder` rather than `IndexedWidgetBuilder`, which is
+/// already declared by `package:flutter/material.dart` with a different
+/// signature - having both imported made the name ambiguous and the builder
+/// constructor unusable.
+typedef AwesomeTabBuilder = Widget Function(int index, bool isActive);
 
+/// How the items are laid out inside the bar.
 enum NavigationBarType {
+  /// Items share the full width of the bar.
   expand,
+
+  /// Items are grouped in the middle, with empty space on both sides.
   center,
 }
 
@@ -20,7 +37,7 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
   final int itemFlex;
 
   /// Widgets to render in the tab bar.
-  final IndexedWidgetBuilder? tabBuilder;
+  final AwesomeTabBuilder? tabBuilder;
 
   /// Total item count.
   final int? itemCount;
@@ -29,7 +46,7 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
   final List<IconData>? icons;
 
   /// Handler which is passed every updated active index.
-  final Function(int) onTap;
+  final ValueChanged<int> onTap;
 
   /// Current index of selected tab bar item.
   final int activeIndex;
@@ -101,13 +118,22 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
   /// To disable scale effect set value of 0.
   final double scaleFactor;
 
-  static const _defaultSplashRadius = 24.0;
+  /// Optional labels announced by screen readers, one per item.
+  ///
+  /// Icons carry no text, so without these an item is announced only as a
+  /// selected button. When given, the list length must match the number of
+  /// items.
+  final List<String>? semanticLabels;
+
+  static const double _defaultSplashRadius = 24.0;
+  static const Color _defaultSplashColor = Colors.purple;
+  static const int _defaultSplashSpeedInMilliseconds = 300;
 
   /// Optional custom tab bar space on left and right of widget. Default is 0.
   final double leftAndRightBonusPadding;
 
   AwesomeFloatingBottomNavigation._internal({
-    Key? key,
+    super.key,
     required this.activeIndex,
     required this.onTap,
     this.tabBuilder,
@@ -137,18 +163,27 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
     this.navigationBarType = NavigationBarType.center,
     this.outerFlex = 4,
     this.itemFlex = 3,
-  })  : assert(icons != null || itemCount != null),
-        assert(
-          ((itemCount ?? icons!.length) >= 2) &&
-              ((itemCount ?? icons!.length) <= 5),
-        ),
-        super(key: key);
+    this.semanticLabels,
+  }) : assert(
+         icons != null || itemCount != null,
+         'Provide either icons or itemCount',
+       ),
+       assert(
+         ((itemCount ?? icons!.length) >= 2) &&
+             ((itemCount ?? icons!.length) <= 5),
+         'The navigation bar supports between 2 and 5 items',
+       ),
+       assert(
+         semanticLabels == null ||
+             semanticLabels.length == (itemCount ?? icons!.length),
+         'semanticLabels must have one entry per item',
+       );
 
   AwesomeFloatingBottomNavigation({
     Key? key,
     required List<IconData> icons,
     required int activeIndex,
-    required Function(int) onTap,
+    required ValueChanged<int> onTap,
     double? height,
     double? splashRadius,
     int? splashSpeedInMilliseconds,
@@ -173,43 +208,45 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
     NavigationBarType navigationBarType = NavigationBarType.center,
     int outerFlex = 4,
     int itemFlex = 3,
+    List<String>? semanticLabels,
   }) : this._internal(
-          key: key,
-          icons: icons,
-          activeIndex: activeIndex,
-          onTap: onTap,
-          height: height,
-          splashRadius: splashRadius ?? _defaultSplashRadius,
-          splashSpeedInMilliseconds: splashSpeedInMilliseconds,
-          notchMargin: notchMargin,
-          backgroundColor: backgroundColor,
-          splashColor: splashColor,
-          activeColor: activeColor,
-          inactiveColor: inactiveColor,
-          cornerRadius: cornerRadius ?? 0,
-          iconSize: iconSize,
-          gapWidth: gapWidth,
-          elevation: elevation,
-          padding: padding ?? EdgeInsets.zero,
-          shadow: shadow,
-          borderColor: borderColor,
-          borderWidth: borderWidth,
-          safeAreaValues: safeAreaValues,
-          backgroundGradient: backgroundGradient,
-          blurEffect: blurEffect,
-          scaleFactor: scaleFactor,
-          leftAndRightBonusPadding: leftAndRightBonusPadding,
-          navigationBarType: navigationBarType,
-          outerFlex: outerFlex,
-          itemFlex: itemFlex,
-        );
+         key: key,
+         icons: icons,
+         activeIndex: activeIndex,
+         onTap: onTap,
+         height: height,
+         splashRadius: splashRadius ?? _defaultSplashRadius,
+         splashSpeedInMilliseconds: splashSpeedInMilliseconds,
+         notchMargin: notchMargin,
+         backgroundColor: backgroundColor,
+         splashColor: splashColor,
+         activeColor: activeColor,
+         inactiveColor: inactiveColor,
+         cornerRadius: cornerRadius ?? 0,
+         iconSize: iconSize,
+         gapWidth: gapWidth,
+         elevation: elevation,
+         padding: padding ?? EdgeInsets.zero,
+         shadow: shadow,
+         borderColor: borderColor,
+         borderWidth: borderWidth,
+         safeAreaValues: safeAreaValues,
+         backgroundGradient: backgroundGradient,
+         blurEffect: blurEffect,
+         scaleFactor: scaleFactor,
+         leftAndRightBonusPadding: leftAndRightBonusPadding,
+         navigationBarType: navigationBarType,
+         outerFlex: outerFlex,
+         itemFlex: itemFlex,
+         semanticLabels: semanticLabels,
+       );
 
   AwesomeFloatingBottomNavigation.builder({
     Key? key,
     required int itemCount,
-    required IndexedWidgetBuilder tabBuilder,
+    required AwesomeTabBuilder tabBuilder,
     required int activeIndex,
-    required Function(int) onTap,
+    required ValueChanged<int> onTap,
     double? height,
     double? splashRadius,
     int? splashSpeedInMilliseconds,
@@ -231,102 +268,114 @@ class AwesomeFloatingBottomNavigation extends StatefulWidget {
     NavigationBarType navigationBarType = NavigationBarType.center,
     int outerFlex = 4,
     int itemFlex = 3,
+    List<String>? semanticLabels,
   }) : this._internal(
-          key: key,
-          tabBuilder: tabBuilder,
-          itemCount: itemCount,
-          activeIndex: activeIndex,
-          onTap: onTap,
-          height: height,
-          splashRadius: splashRadius ?? _defaultSplashRadius,
-          splashSpeedInMilliseconds: splashSpeedInMilliseconds,
-          notchMargin: notchMargin,
-          backgroundColor: backgroundColor,
-          splashColor: splashColor,
-          cornerRadius: cornerRadius ?? 0,
-          gapWidth: gapWidth,
-          elevation: elevation,
-          padding: padding ?? EdgeInsets.zero,
-          shadow: shadow,
-          borderColor: borderColor,
-          borderWidth: borderWidth,
-          safeAreaValues: safeAreaValues,
-          backgroundGradient: backgroundGradient,
-          blurEffect: blurEffect,
-          scaleFactor: scaleFactor,
-          leftAndRightBonusPadding: leftAndRightBonusPadding,
-          navigationBarType: navigationBarType,
-          outerFlex: outerFlex,
-          itemFlex: itemFlex,
-        );
+         key: key,
+         tabBuilder: tabBuilder,
+         itemCount: itemCount,
+         activeIndex: activeIndex,
+         onTap: onTap,
+         height: height,
+         splashRadius: splashRadius ?? _defaultSplashRadius,
+         splashSpeedInMilliseconds: splashSpeedInMilliseconds,
+         notchMargin: notchMargin,
+         backgroundColor: backgroundColor,
+         splashColor: splashColor,
+         cornerRadius: cornerRadius ?? 0,
+         gapWidth: gapWidth,
+         elevation: elevation,
+         padding: padding ?? EdgeInsets.zero,
+         shadow: shadow,
+         borderColor: borderColor,
+         borderWidth: borderWidth,
+         safeAreaValues: safeAreaValues,
+         backgroundGradient: backgroundGradient,
+         blurEffect: blurEffect,
+         scaleFactor: scaleFactor,
+         leftAndRightBonusPadding: leftAndRightBonusPadding,
+         navigationBarType: navigationBarType,
+         outerFlex: outerFlex,
+         itemFlex: itemFlex,
+         semanticLabels: semanticLabels,
+       );
 
   @override
   State<AwesomeFloatingBottomNavigation> createState() =>
-      _AwesomeFloationgBottomNavigationBarState();
+      _AwesomeFloatingBottomNavigationState();
 }
 
-class _AwesomeFloationgBottomNavigationBarState
+class _AwesomeFloatingBottomNavigationState
     extends State<AwesomeFloatingBottomNavigation>
-    with TickerProviderStateMixin {
-  late ValueListenable<ScaffoldGeometry> geometryListenable;
-
-  late AnimationController _bubbleController;
+    with SingleTickerProviderStateMixin {
+  /// One controller for the lifetime of this state. It used to be recreated on
+  /// every `didUpdateWidget`, which leaked a ticker per rebuild and threw
+  /// "disposed with an active Ticker" once the bar left the tree.
+  late final AnimationController _bubbleController;
+  late final CurvedAnimation _bubble;
 
   double _bubbleRadius = 0;
   double _iconScale = 1;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    geometryListenable = Scaffold.geometryOf(context);
+  void initState() {
+    super.initState();
+    _bubbleController = AnimationController(
+      duration: Duration(
+        milliseconds:
+            widget.splashSpeedInMilliseconds ??
+            AwesomeFloatingBottomNavigation._defaultSplashSpeedInMilliseconds,
+      ),
+      vsync: this,
+    );
+    _bubble = CurvedAnimation(parent: _bubbleController, curve: Curves.linear)
+      ..addListener(_onBubbleTick);
   }
 
   @override
   void didUpdateWidget(AwesomeFloatingBottomNavigation oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // if (widget.activeIndex != oldWidget.activeIndex) {
-    //   _startBubbleAnimation();
-    // }
-    _startBubbleAnimation();
+    if (widget.splashSpeedInMilliseconds !=
+        oldWidget.splashSpeedInMilliseconds) {
+      _bubbleController.duration = Duration(
+        milliseconds:
+            widget.splashSpeedInMilliseconds ??
+            AwesomeFloatingBottomNavigation._defaultSplashSpeedInMilliseconds,
+      );
+    }
+    // Only a change of selection animates. Animating on every rebuild replayed
+    // the splash whenever anything above this widget rebuilt.
+    if (widget.activeIndex != oldWidget.activeIndex) {
+      _bubbleController.forward(from: 0);
+    }
   }
 
-  void _startBubbleAnimation() {
-    _bubbleController = AnimationController(
-      duration: Duration(milliseconds: widget.splashSpeedInMilliseconds ?? 300),
-      vsync: this,
-    );
-
-    final bubbleCurve = CurvedAnimation(
-      parent: _bubbleController,
-      curve: Curves.linear,
-    );
-
-    Tween<double>(begin: 0, end: 1).animate(bubbleCurve).addListener(() {
-      setState(() {
-        _bubbleRadius = widget.splashRadius * bubbleCurve.value;
-        if (_bubbleRadius == widget.splashRadius) {
-          _bubbleRadius = 0;
-        }
-
-        if (bubbleCurve.value < 0.5) {
-          _iconScale = 1 + bubbleCurve.value * widget.scaleFactor;
-        } else {
-          _iconScale =
-              1 + widget.scaleFactor - bubbleCurve.value * widget.scaleFactor;
-        }
-      });
+  void _onBubbleTick() {
+    setState(() {
+      final double progress = _bubble.value;
+      _bubbleRadius = widget.splashRadius * progress;
+      if (_bubbleRadius == widget.splashRadius) {
+        _bubbleRadius = 0;
+      }
+      _iconScale = progress < 0.5
+          ? 1 + progress * widget.scaleFactor
+          : 1 + widget.scaleFactor - progress * widget.scaleFactor;
     });
+  }
 
-    if (_bubbleController.isAnimating) {
-      _bubbleController.reset();
-    }
-    _bubbleController.forward();
+  @override
+  void dispose() {
+    _bubble
+      ..removeListener(_onBubbleTick)
+      ..dispose();
+    _bubbleController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    CustomRoundedRectangleClipper clipper =
-        CustomRoundedRectangleClipper(widget.cornerRadius ?? 0);
+    final _RoundedRectangleClipper clipper = _RoundedRectangleClipper(
+      widget.cornerRadius ?? 0,
+    );
     return Padding(
       padding: widget.padding ?? EdgeInsets.zero,
       child: PhysicalShape(
@@ -376,84 +425,82 @@ class _AwesomeFloationgBottomNavigationBarState
         mainAxisAlignment: widget.navigationBarType == NavigationBarType.center
             ? MainAxisAlignment.center
             : MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
         children: _buildItems(),
       ),
     );
   }
 
   List<Widget> _buildItems() {
-    final itemCount = widget.itemCount ?? widget.icons!.length;
+    final int itemCount = widget.itemCount ?? widget.icons!.length;
+    final bool centered = widget.navigationBarType == NavigationBarType.center;
 
-    final items = <Widget>[];
-    if (widget.navigationBarType == NavigationBarType.center) {
-      items.add(FlexibleOuterSpace(flex: widget.outerFlex));
-    }
-    for (var i = 0; i < itemCount; i++) {
-      final isActive = i == widget.activeIndex;
-
+    final List<Widget> items = <Widget>[];
+    if (centered) items.add(_FlexibleOuterSpace(flex: widget.outerFlex));
+    for (int i = 0; i < itemCount; i++) {
+      final bool isActive = i == widget.activeIndex;
       items.add(
         NavigationBarItem(
           isActive: isActive,
           bubbleRadius: _bubbleRadius,
           maxBubbleRadius: widget.splashRadius,
-          bubbleColor: widget.splashColor,
+          // Passing a null splashColor used to reach the painter as null,
+          // which painted the splash white - invisible on the default
+          // background - rather than the documented purple.
+          bubbleColor:
+              widget.splashColor ??
+              AwesomeFloatingBottomNavigation._defaultSplashColor,
           activeColor: widget.activeColor,
           inactiveColor: widget.inactiveColor,
           iconData: widget.icons?.elementAt(i),
           iconScale: _iconScale,
           iconSize: widget.iconSize,
           onTap: () => widget.onTap(i),
-          itemFlex: widget.navigationBarType == NavigationBarType.center
-              ? widget.itemFlex
-              : null,
+          itemFlex: centered ? widget.itemFlex : null,
+          semanticLabel: widget.semanticLabels?.elementAt(i),
           child: widget.tabBuilder?.call(i, isActive),
         ),
       );
     }
-    if (widget.navigationBarType == NavigationBarType.center) {
-      items.add(FlexibleOuterSpace(flex: widget.outerFlex));
-    }
+    if (centered) items.add(_FlexibleOuterSpace(flex: widget.outerFlex));
     return items;
   }
 }
 
-class FlexibleOuterSpace extends StatelessWidget {
+class _FlexibleOuterSpace extends StatelessWidget {
+  const _FlexibleOuterSpace({required this.flex});
+
   final int flex;
 
-  const FlexibleOuterSpace({Key? key, required this.flex}) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      flex: flex,
-      child: Container(),
-    );
-  }
+  Widget build(BuildContext context) =>
+      Flexible(flex: flex, child: const SizedBox.shrink());
 }
 
-class CustomRoundedRectangleClipper extends CustomClipper<Path> {
-  final double borderRadius;
+class _RoundedRectangleClipper extends CustomClipper<Path> {
+  const _RoundedRectangleClipper(this.borderRadius);
 
-  CustomRoundedRectangleClipper(this.borderRadius);
+  final double borderRadius;
 
   @override
   Path getClip(Size size) {
-    final path = Path()
+    return Path()
       ..moveTo(borderRadius, 0)
       ..lineTo(size.width - borderRadius, 0)
       ..quadraticBezierTo(size.width, 0, size.width, borderRadius)
       ..lineTo(size.width, size.height - borderRadius)
       ..quadraticBezierTo(
-          size.width, size.height, size.width - borderRadius, size.height)
+        size.width,
+        size.height,
+        size.width - borderRadius,
+        size.height,
+      )
       ..lineTo(borderRadius, size.height)
       ..quadraticBezierTo(0, size.height, 0, size.height - borderRadius)
       ..lineTo(0, borderRadius)
       ..quadraticBezierTo(0, 0, borderRadius, 0);
-
-    return path;
   }
 
   @override
-  bool shouldReclip(CustomRoundedRectangleClipper oldClipper) => true;
+  bool shouldReclip(_RoundedRectangleClipper oldClipper) =>
+      oldClipper.borderRadius != borderRadius;
 }

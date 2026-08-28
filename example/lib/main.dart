@@ -36,15 +36,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     Icons.search,
     Icons.shopping_bag,
     Icons.qr_code,
-    Icons.account_circle
+    Icons.account_circle,
   ];
 
   PageController pageController = PageController();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +47,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       extendBody: true,
       appBar: AppBar(
         backgroundColor: Colors.black87,
-        title: Text(
-          widget.title,
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text(widget.title, style: const TextStyle(color: Colors.white)),
       ),
       body: PageView(
         controller: pageController,
@@ -76,17 +68,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         itemCount: iconList.length,
         tabBuilder: (int index, bool isActive) {
           final color = isActive ? Colors.green : Colors.grey;
-          return Center(
-            child: Icon(
-              iconList[index],
-              size: 24,
-              color: color,
-            ),
-          );
+          return Center(child: Icon(iconList[index], size: 24, color: color));
         },
         backgroundColor: Colors.black87,
-        activeIndex:
-            pageController.hasClients ? pageController.page?.round() ?? 0 : 0,
+        activeIndex: pageController.hasClients
+            ? pageController.page?.round() ?? 0
+            : 0,
         splashColor: Colors.green.shade400,
         splashSpeedInMilliseconds: 300,
         cornerRadius: 32,
@@ -102,6 +89,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           color: Colors.grey,
         ),
         navigationBarType: NavigationBarType.center,
+        semanticLabels: const [
+          'Dashboard',
+          'Search',
+          'Shopping bag',
+          'QR code',
+          'Account',
+        ],
       ),
     );
   }
@@ -119,44 +113,32 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> animation;
+  late CurvedAnimation animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+  }
 
   @override
   void didUpdateWidget(NavigationScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.iconData != widget.iconData) {
-      _startAnimation();
+      // Restart the existing controller - creating a new one here would leak
+      // a ticker on every change.
+      _controller.forward(from: 0);
     }
   }
 
   @override
-  void initState() {
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-    _controller.forward();
-    super.initState();
-  }
-
-  _startAnimation() {
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-    _controller.forward();
-  }
-
-  @override
   void dispose() {
+    animation.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -164,17 +146,11 @@ class _NavigationScreenState extends State<NavigationScreen>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.background,
+      color: Theme.of(context).colorScheme.surface,
       child: ListView(
         children: [
           const SizedBox(height: 64),
-          Center(
-            child: Icon(
-              widget.iconData,
-              color: Colors.green,
-              size: 160,
-            ),
-          ),
+          Center(child: Icon(widget.iconData, color: Colors.green, size: 160)),
         ],
       ),
     );

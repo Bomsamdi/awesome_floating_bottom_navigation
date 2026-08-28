@@ -3,35 +3,40 @@ import 'package:flutter/material.dart';
 class BubblePainter extends CustomPainter {
   final double bubbleRadius;
   final double maxBubbleRadius;
-  final Color? bubbleColor;
-  final Color? endColor;
+  final Color bubbleColor;
+  final Color endColor;
 
   BubblePainter({
     required this.bubbleRadius,
     required this.maxBubbleRadius,
-    this.bubbleColor = Colors.purple,
-  })  : endColor = Color.lerp(bubbleColor, Colors.white, 0.8),
-        super();
+    required this.bubbleColor,
+  }) : endColor = Color.lerp(bubbleColor, Colors.white, 0.8)!;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (bubbleRadius == maxBubbleRadius) return;
 
-    var animationProgress = bubbleRadius / maxBubbleRadius;
+    final double animationProgress = bubbleRadius / maxBubbleRadius;
 
-    double strokeWidth = bubbleRadius < maxBubbleRadius * 0.5
+    final double strokeWidth = bubbleRadius < maxBubbleRadius * 0.5
         ? bubbleRadius
         : maxBubbleRadius - bubbleRadius;
 
-    final paint = Paint()
+    final Paint paint = Paint()
       ..color = Color.lerp(bubbleColor, endColor, animationProgress)!
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
 
     canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), bubbleRadius, paint);
+      Offset(size.width / 2, size.height / 2),
+      bubbleRadius,
+      paint,
+    );
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(BubblePainter oldDelegate) =>
+      oldDelegate.bubbleRadius != bubbleRadius ||
+      oldDelegate.maxBubbleRadius != maxBubbleRadius ||
+      oldDelegate.bubbleColor != bubbleColor;
 }

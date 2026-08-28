@@ -23,7 +23,8 @@ class AroundCustomPainter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      key: UniqueKey(),
+      // No UniqueKey here: it forced the whole subtree to be torn down and
+      // rebuilt on every single build of this widget.
       painter: _AroundCustomPainter(
         clipper: clipper,
         shadow: shadow,
@@ -42,7 +43,7 @@ class _AroundCustomPainter extends CustomPainter {
   final double borderWidth;
   final Color borderColor;
 
-  _AroundCustomPainter({
+  const _AroundCustomPainter({
     required this.borderColor,
     required this.borderWidth,
     required this.clipper,
@@ -51,25 +52,31 @@ class _AroundCustomPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final clipPath = clipper.getClip(size);
+    if (size.height == 0) return;
 
-    final borderPaint = Paint()
-      ..color = borderColor
-      ..strokeCap = StrokeCap.square
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = borderWidth;
-    final shadowPaint = shadow?.toPaint();
+    final Path clipPath = clipper.getClip(size);
 
-    if (size.height != 0) {
-      if (borderPaint.color.value != Colors.transparent.value) {
-        canvas.drawPath(clipPath, borderPaint);
-      }
-      if (shadow != null && shadow!.color.value != Colors.transparent.value) {
-        canvas.drawPath(clipPath.shift(shadow!.offset), shadowPaint!);
-      }
+    if (borderColor.a > 0) {
+      canvas.drawPath(
+        clipPath,
+        Paint()
+          ..color = borderColor
+          ..strokeCap = StrokeCap.square
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = borderWidth,
+      );
+    }
+
+    final Shadow? shadow = this.shadow;
+    if (shadow != null && shadow.color.a > 0) {
+      canvas.drawPath(clipPath.shift(shadow.offset), shadow.toPaint());
     }
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(_AroundCustomPainter oldDelegate) =>
+      oldDelegate.borderColor != borderColor ||
+      oldDelegate.borderWidth != borderWidth ||
+      oldDelegate.shadow != shadow ||
+      oldDelegate.clipper != clipper;
 }

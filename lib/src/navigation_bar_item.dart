@@ -6,7 +6,7 @@ class NavigationBarItem extends StatelessWidget {
   final bool isActive;
   final double bubbleRadius;
   final double maxBubbleRadius;
-  final Color? bubbleColor;
+  final Color bubbleColor;
   final Color? activeColor;
   final Color? inactiveColor;
   final IconData? iconData;
@@ -14,6 +14,7 @@ class NavigationBarItem extends StatelessWidget {
   final double? iconSize;
   final VoidCallback onTap;
   final int? itemFlex;
+  final String? semanticLabel;
   final Widget? child;
 
   const NavigationBarItem({
@@ -29,6 +30,7 @@ class NavigationBarItem extends StatelessWidget {
     required this.iconSize,
     required this.onTap,
     this.itemFlex,
+    this.semanticLabel,
     this.child,
   });
 
@@ -42,18 +44,11 @@ class NavigationBarItem extends StatelessWidget {
   }
 
   Widget _buildExpanded() {
-    return Expanded(
-      child: SizedBox.expand(
-        child: buildItem(),
-      ),
-    );
+    return Expanded(child: SizedBox.expand(child: buildItem()));
   }
 
   Widget _buildFlexible() {
-    return Flexible(
-      flex: itemFlex ?? 1,
-      child: buildItem(),
-    );
+    return Flexible(flex: itemFlex ?? 1, child: buildItem());
   }
 
   Widget buildItem() {
@@ -63,22 +58,32 @@ class NavigationBarItem extends StatelessWidget {
         bubbleColor: bubbleColor,
         maxBubbleRadius: maxBubbleRadius,
       ),
-      child: InkWell(
-        splashColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        onTap: onTap,
-        child: Transform.scale(
-          scale: isActive ? iconScale : 1,
-          child: TabItem(
-            isActive: isActive,
-            iconData: iconData,
-            iconSize: iconSize,
-            activeColor: activeColor,
-            inactiveColor: inactiveColor,
-            child: child,
-          ),
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: semanticLabel,
+        container: true,
+        child: _buildTapTarget(),
+      ),
+    );
+  }
+
+  Widget _buildTapTarget() {
+    return InkWell(
+      splashColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      onTap: onTap,
+      child: Transform.scale(
+        scale: isActive ? iconScale : 1,
+        child: TabItem(
+          isActive: isActive,
+          iconData: iconData,
+          iconSize: iconSize,
+          activeColor: activeColor,
+          inactiveColor: inactiveColor,
+          child: child,
         ),
       ),
     );
